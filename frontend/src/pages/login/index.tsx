@@ -19,7 +19,7 @@ const Login = () => {
 
   const handleLogin = async (data: TLogin) => {
     signIn({ password: data.password, username: data.username }).then(() => {
-      push("/forum/list");
+      push("/chat/list");
     });
   };
 

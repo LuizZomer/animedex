@@ -18,30 +18,31 @@ export const PublicChatMessages = () => {
   const getAllMessage = async () => {
     await api.get(`api/chat/messages/${chatId}`).then(({ data }) => {
       setMessages(data.content);
-      console.log(data.content);
     });
   };
 
+  const handleSendMessage = () => {
+    sendMessage({ message: newMessage, room: Number(chatId) });
+    setNewMessage("");
+  };
+
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !chatId) return;
+
+    getAllMessage();
+
     joinRoom(Number(chatId));
 
-    return () => {
-      leaveRoom(Number(chatId));
-    };
+    return () => leaveRoom(Number(chatId));
   }, [socket, chatId]);
 
   useEffect(() => {
-    if (chatId) getAllMessage();
-  }, [chatId]);
-
-  useEffect(() => {
-    
-  }, [])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
     <div>
-      <div className="flex flex-col w-full gap-3 p-3">
+      <div className="flex flex-col w-full gap-3 p-5  h-[95vh] overflow-auto">
         {messages.map(({ message, User, createdAt, id }) => (
           <div
             key={id}
@@ -56,19 +57,23 @@ export const PublicChatMessages = () => {
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
-      <div className="flex gap-2">
-        <Input onChange={({ target }) => setNewMessage(target.value)} />
-        <Button
-          disabled={newMessage.length < 1}
-          onClick={() =>
-            sendMessage({ message: newMessage, room: Number(chatId) })
-          }
-        >
-          -&gt;
+      <div className="flex gap-2 px-4">
+        <Input
+          onChange={({ target }) => setNewMessage(target.value)}
+          value={newMessage}
+          placeholder=""
+          onKeyDown={({ key }) => {
+            if (key === "Enter") {
+              handleSendMessage();
+            }
+          }}
+        />
+        <Button disabled={newMessage.length < 1} onClick={handleSendMessage}>
+          Enviar
         </Button>
       </div>
-      <div ref={messagesEndRef} />
     </div>
   );
 };
