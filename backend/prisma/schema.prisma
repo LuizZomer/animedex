@@ -39,6 +39,7 @@ model AccessUserChat {
 model Chat {
   id             Int              @id @default(autoincrement())
   name           String
+  description    String
   category       String
   ChatLine       ChatLine[]
   createdAt      DateTime         @default(now())

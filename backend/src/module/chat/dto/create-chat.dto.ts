@@ -5,6 +5,9 @@ export class createChatDTO {
   @IsString({ message: 'Nome é obrigatório' })
   name: string;
 
+  @IsString({ message: 'Descrição é obrigatório' })
+  description: string;
+
   @IsEnum(Categories, { message: 'Categoria não existente' })
-  categories: Categories;
+  category: Categories;
 }

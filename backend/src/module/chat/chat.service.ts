@@ -20,16 +20,43 @@ export class ChatServices {
     });
   }
 
-  async createChat({ category, name }: Omit<Chat, 'id' | 'createdAt'>) {
+  async createChat({
+    category,
+    name,
+    description,
+  }: Omit<Chat, 'id' | 'createdAt'>) {
     return this.prisma.chat.create({
       data: {
         name,
         category,
+        description,
       },
     });
   }
 
   async listAllChats() {
     return this.prisma.chat.findMany();
+  }
+
+  async listAllChatMessages(chatId: number) {
+    return this.prisma.chatLine.findMany({
+      select: {
+        User: {
+          select: {
+            username: true,
+            id: true,
+          },
+        },
+        id: true,
+        createdAt: true,
+        message: true,
+      },
+      where: {
+        chatId,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
   }
 }

@@ -6,8 +6,6 @@ import { WsException } from '@nestjs/websockets';
 export class JwtWsGuard extends AuthGuard('jwt-auth') {
   getRequest(context: ExecutionContext) {
     const client = context.switchToWs().getClient();
-    console.log('b');
-
     // Criamos um "fake request" para o Passport extrair o token corretamente
     return {
       headers: {
@@ -20,8 +18,6 @@ export class JwtWsGuard extends AuthGuard('jwt-auth') {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isValid = (await super.canActivate(context)) as boolean;
-    console.log('a');
-
     if (isValid) {
       const client = context.switchToWs().getClient();
       client.user = context.switchToHttp().getRequest().user; // Associamos o usuário ao WebSocket

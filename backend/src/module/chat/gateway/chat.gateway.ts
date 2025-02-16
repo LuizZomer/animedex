@@ -12,17 +12,24 @@ import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Injectable, UseGuards } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { ChatServices } from '../chat.service';
 
 interface AuthenticatedSocket extends Socket {
   user?: User;
 }
 
-@WebSocketGateway(80, { namespace: 'api/chat' })
+@WebSocketGateway(80, {
+  namespace: 'api/chat',
+  cors: { origin: 'http://localhost:4000', credentials: true },
+})
 @Injectable()
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer() server: Server;
 
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly chatService: ChatServices,
+  ) {}
 
   async handleConnection(@ConnectedSocket() client: AuthenticatedSocket) {
     try {
@@ -53,33 +60,43 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('joinRoom')
   handleJoinRoom(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { room: number },
+    @MessageBody() room: number,
   ) {
-    client.join(String(data.room));
-    client.emit('Entrou na sala', { room: data.room });
+    console.log(`usuario: ${client.user?.username} Entrou na sala ${room}`);
+    client.join(String(room));
+    client.emit('Entrou na sala', { room });
   }
 
   @UseGuards(JwtService)
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { room: number },
+    @MessageBody() room: number,
   ) {
-    client.leave(String(data.room));
-    client.emit('leftRoom', { room: data.room });
+    client.leave(String(room));
+    client.emit('leftRoom', { room });
   }
 
   @UseGuards(JwtWsGuard)
-  @SubscribeMessage('message')
-  sendMessage(
+  @SubscribeMessage('newMessage')
+  async sendMessage(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody()
-    payload: { message: string; user: { id: number }; room: number },
+    payload: { message: string; room: number },
   ) {
     const { message, room } = payload;
 
-    this.server
-      .to(String(room))
-      .emit('message', { message, sendUser: client.user });
+    const messageData = await this.chatService.sendMessage({
+      chatId: room,
+      message,
+      userId: client.user!.id,
+    });
+
+    this.server.to(String(room)).emit('newMessage', {
+      message: messageData.message,
+      User: { id: client.user?.id, username: client.user?.username },
+      createdAt: messageData.createdAt,
+      id: messageData.id,
+    });
   }
 }
