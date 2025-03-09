@@ -8,6 +8,7 @@ const schema = z
     email: z.string().email("Email obrigatório").min(1, "Campo obrigatório"),
     password: z.string().min(1, "Campo obrigatório"),
     confirmPassword: z.string().min(1, "Campo obrigatório"),
+    photo: z.instanceof(File).optional(),
   })
   .superRefine((val, ctx) => {
     if (val.password !== val.confirmPassword) {

@@ -23,10 +23,10 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    return response;
+    return Promise.resolve(response);
   },
   (error) => {
-    toast.error(error.response.data.error.message);
+    toast.error(error.response.data?.error?.message);
     return Promise.reject(error);
   }
 );

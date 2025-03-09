@@ -17,9 +17,21 @@ const Register = () => {
   const { push } = useRouter();
 
   const handleRegister = (data: TRegister) => {
+    const formData = new FormData();
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (key !== "photo") {
+        formData.append(key, value);
+      }
+    });
+
+    if (data.photo instanceof File) {
+      formData.append("photo", data.photo);
+    }
+
     api
-      .post("/api/user/register", {
-        ...data,
+      .post("/api/user/register", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       })
       .then(() => {
         push("/login");
@@ -31,6 +43,30 @@ const Register = () => {
       <h1>Register</h1>
       <Form {...methods}>
         <form onSubmit={methods.handleSubmit(handleRegister)}>
+          <FormField
+            name="photo"
+            control={methods.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Foto de perfil:</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    accept="image/png, image/jpeg, image/jpg"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      field.onChange(file);
+                    }}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             name="username"
             control={methods.control}

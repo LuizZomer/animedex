@@ -16,7 +16,9 @@ datasource db {
 model User {
   id             Int              @id @default(autoincrement())
   username       String           @unique
+  externalId     String           @default(uuid())
   email          String           @unique
+  perfilPhoto    String?          @map("perfil_photo")
   password       String
   ChatLine       ChatLine[]
   createdAt      DateTime         @default(now())
@@ -41,11 +43,32 @@ model Chat {
   name           String
   description    String
   category       String
+  photo          String?
   ChatLine       ChatLine[]
   createdAt      DateTime         @default(now())
   AccessUserChat AccessUserChat[]
+  TagsOfChats    TagsOfChats[]
 
   @@map("chats")
+}
+
+model TagsOfChats {
+  id        Int @id @default(autoincrement())
+  chatTagId Int
+  chatId    Int
+
+  chat Chat    @relation(fields: [chatId], references: [id])
+  tag  ChatTag @relation(fields: [chatTagId], references: [id])
+
+  @@map("tags_of_chat")
+}
+
+model ChatTag {
+  id          Int           @id @default(autoincrement())
+  name        String
+  TagsOfChats TagsOfChats[]
+
+  @@map("chat_tag")
 }
 
 model ChatLine {
@@ -57,4 +80,6 @@ model ChatLine {
 
   Chat Chat @relation(fields: [chatId], references: [id])
   User User @relation(fields: [userId], references: [id])
+
+  @@map("chat_line")
 }

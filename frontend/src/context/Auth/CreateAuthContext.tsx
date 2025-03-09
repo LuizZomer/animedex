@@ -4,8 +4,7 @@ import { createContext } from "react";
 export interface IDecodedToken extends JwtPayload {
   id: number;
   username: string;
-  email: string;
-  createdAt: Date;
+  photo: string;
 }
 
 export interface IAuthContext {

@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!user) {
       const decodedToken = jwt.decode(token) as IDecodedToken;
+      console.log(decodedToken);
 
       setUser(decodedToken);
     }
