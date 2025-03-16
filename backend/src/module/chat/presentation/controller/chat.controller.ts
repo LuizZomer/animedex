@@ -7,12 +7,17 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { createChatDTO } from '../dto/create-chat.dto';
-import { ChatServices } from '../../domains/chat.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { responseWithUser } from 'src/@types/response/responseWithUser';
+import { JwtAuth } from 'src/utils/guards/jwt-auth.guard';
+import { ChatServices } from '../../domains/chat.service';
+import { createChatDTO } from '../dto/create-chat.dto';
 
 @Controller('chat')
 export class ChatController {
@@ -20,20 +25,21 @@ export class ChatController {
 
   @HttpCode(HttpStatus.OK)
   @Get()
-  async findAllChats() {
-    const allChats = await this.chatService.listAllChats();
+  async findAllChats(
+    @Query('page', ParseIntPipe) page: number,
+    @Query('take', ParseIntPipe) take: number,
+  ) {
+    const content = await this.chatService.listAllChats({ take, page });
 
     return {
       statusCode: HttpStatus.OK,
-      content: allChats,
+      content,
     };
   }
 
   @HttpCode(HttpStatus.OK)
   @Get('messages/:chatId')
   async findAllChatMessages(@Param('chatId', ParseIntPipe) chatId: number) {
-    console.log(chatId);
-
     const allMessages = await this.chatService.listAllChatMessages(chatId);
 
     return {
@@ -42,21 +48,28 @@ export class ChatController {
     };
   }
 
+  @UseGuards(JwtAuth)
   @Post()
   @UseInterceptors(FileInterceptor('photo'))
   async createChat(
     @Body() body: createChatDTO,
     @UploadedFile() file: Express.Multer.File,
+    @Req() res: responseWithUser,
   ) {
-    console.log(body.tags);
-
-    const newChat = await this.chatService.createChat({
-      category: body.category,
-      name: body.name,
-      description: body.description,
-      photo: file,
-      tags: JSON.parse(body.tags as unknown as string),
-    });
+    const newChat = await this.chatService.createChat(
+      {
+        category: body.category,
+        name: body.name,
+        description: body.description,
+        photo: file,
+        tags: JSON.parse(body.tags as unknown as string),
+        isPublic: body.isPublic,
+        accessUser: Array.isArray(body.accessUser)
+          ? body.accessUser
+          : JSON.parse(body.accessUser),
+      },
+      res.user,
+    );
 
     return {
       statusCode: HttpStatus.CREATED,

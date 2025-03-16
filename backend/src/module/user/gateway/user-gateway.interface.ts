@@ -5,4 +5,5 @@ export class UserGatewayInterface {
     userData: Pick<User, 'email' | 'password' | 'perfilPhoto' | 'username'>,
   ) => Promise<User>;
   findOneUserByUsername: (username: string) => Promise<User | null>;
+  findUsers: () => Promise<User[]>;
 }

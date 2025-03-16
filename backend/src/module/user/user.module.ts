@@ -7,6 +7,7 @@ import { UserGateway } from './gateway/user-gateway.prisma';
 import { RegisterUseCase } from './domains/use-case/register.use-case';
 import { GetUserProfileUseCase } from './domains/use-case/get-user-profile.use-case';
 import { GetOneUserUseCase } from './domains/use-case/get-one-user.use-case';
+import { FindAllUserUseCase } from './domains/use-case/find-all-users.use-case';
 
 @Module({
   imports: [FileModule],
@@ -17,6 +18,7 @@ import { GetOneUserUseCase } from './domains/use-case/get-one-user.use-case';
     RegisterUseCase,
     GetUserProfileUseCase,
     GetOneUserUseCase,
+    FindAllUserUseCase,
   ],
   controllers: [UserController],
   exports: [UserService],

@@ -5,6 +5,8 @@ import { CreateChatUseCase } from './use-case/create-chat.use-case';
 import { SendMessageUseCase } from './use-case/send-message.use-case';
 import { ListAllChatMessagesUseCase } from './use-case/list-all-chat-messages.use-case';
 import { FindAllChatsWithRelationsUseCase } from './use-case/find-all-chats.use-case';
+import { User } from '@prisma/client';
+import { DefaultFilter } from 'src/@types/pagination/defaultFilter';
 
 @Injectable()
 export class ChatServices {
@@ -19,14 +21,12 @@ export class ChatServices {
     return this.sendMessageUseCase.execute(chatLineData);
   }
 
-  async createChat(chatData: createChatDTO) {
-    console.log(chatData);
-
-    return this.createChatUseCase.execute(chatData);
+  async createChat(chatData: createChatDTO, user: User) {
+    return this.createChatUseCase.execute(chatData, user);
   }
 
-  async listAllChats() {
-    return this.findAllChatsWithRelationsUseCase.execute();
+  async listAllChats({ take, page }: DefaultFilter) {
+    return this.findAllChatsWithRelationsUseCase.execute({ take, page });
   }
 
   async listAllChatMessages(chatId: number) {

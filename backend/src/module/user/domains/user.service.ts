@@ -5,6 +5,7 @@ import { IUserProfileOutput } from '../presentation/dtos/user-profile.output';
 import { GetOneUserUseCase } from './use-case/get-one-user.use-case';
 import { GetUserProfileUseCase } from './use-case/get-user-profile.use-case';
 import { RegisterUseCase } from './use-case/register.use-case';
+import { FindAllUserUseCase } from './use-case/find-all-users.use-case';
 
 @Injectable()
 export class UserService {
@@ -12,6 +13,7 @@ export class UserService {
     private readonly registerUseCase: RegisterUseCase,
     private readonly getUserProfileUseCase: GetUserProfileUseCase,
     private readonly getOneUserUseCase: GetOneUserUseCase,
+    private readonly findAllUserUseCase: FindAllUserUseCase,
   ) {}
 
   async createUser({ email, password, username, photo }: CreateUserDTO) {
@@ -24,5 +26,9 @@ export class UserService {
 
   async findOne(username: string): Promise<User | null> {
     return this.getOneUserUseCase.execute(username);
+  }
+
+  async findAllUsers() {
+    return this.findAllUserUseCase.execute();
   }
 }

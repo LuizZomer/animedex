@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBooleanString,
   IsEnum,
   IsOptional,
   IsString,
@@ -19,6 +20,9 @@ export class createChatDTO {
   @IsEnum(CATEGORIES, { message: 'Categoria não existente' })
   category: CATEGORIES;
 
+  @IsBooleanString()
+  isPublic: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => IChatTagsDTO)
@@ -26,4 +30,8 @@ export class createChatDTO {
 
   @IsOptional()
   photo: Express.Multer.File;
+
+  @IsArray()
+  @IsString({ each: true, message: 'Precisa ser passado o externalId' })
+  accessUser: string[];
 }

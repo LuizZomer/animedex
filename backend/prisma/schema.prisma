@@ -14,15 +14,16 @@ datasource db {
 }
 
 model User {
-  id             Int              @id @default(autoincrement())
-  username       String           @unique
-  externalId     String           @default(uuid())
-  email          String           @unique
-  perfilPhoto    String?          @map("perfil_photo")
-  password       String
-  ChatLine       ChatLine[]
-  createdAt      DateTime         @default(now())
-  AccessUserChat AccessUserChat[]
+  id              Int              @id @default(autoincrement())
+  username        String           @unique
+  externalId      String           @default(uuid())
+  email           String           @unique
+  perfilPhoto     String?          @map("perfil_photo")
+  password        String
+  chatLines       ChatLine[]
+  createdAt       DateTime         @default(now())
+  accessUsersChat AccessUserChat[]
+  Chat            Chat[]
 
   @@map("users")
 }
@@ -32,22 +33,25 @@ model AccessUserChat {
   userId Int @unique
   chatId Int
 
-  User User @relation(fields: [userId], references: [id])
-  Chat Chat @relation(fields: [chatId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id])
 
   @@map("access_user_chat")
 }
 
 model Chat {
-  id             Int              @id @default(autoincrement())
-  name           String
-  description    String
-  category       String
-  photo          String?
-  ChatLine       ChatLine[]
-  createdAt      DateTime         @default(now())
-  AccessUserChat AccessUserChat[]
-  TagsOfChats    TagsOfChats[]
+  id              Int              @id @default(autoincrement())
+  name            String
+  description     String
+  category        String
+  photo           String?
+  isPublic        Boolean
+  creator         User             @relation(fields: [userId], references: [id])
+  chatLines       ChatLine[]
+  createdAt       DateTime         @default(now())
+  accessUsersChat AccessUserChat[]
+  tagsOfChats     TagsOfChats[]
+  userId          Int
 
   @@map("chats")
 }
@@ -66,7 +70,7 @@ model TagsOfChats {
 model ChatTag {
   id          Int           @id @default(autoincrement())
   name        String
-  TagsOfChats TagsOfChats[]
+  tagsOfChats TagsOfChats[]
 
   @@map("chat_tag")
 }
@@ -78,8 +82,8 @@ model ChatLine {
   message   String
   createdAt DateTime @default(now())
 
-  Chat Chat @relation(fields: [chatId], references: [id])
-  User User @relation(fields: [userId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@map("chat_line")
 }

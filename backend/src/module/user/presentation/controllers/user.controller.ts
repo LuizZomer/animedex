@@ -36,4 +36,9 @@ export class UserController {
   async getProfile(@Req() req) {
     return this.userService.getProfile(req.user.username as string);
   }
+
+  @Get('list')
+  async getAllUsers() {
+    return this.userService.findAllUsers();
+  }
 }

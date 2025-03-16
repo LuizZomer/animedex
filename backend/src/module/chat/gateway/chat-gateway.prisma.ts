@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Chat, ChatLine } from '@prisma/client';
+import { Chat, ChatLine, User } from '@prisma/client';
 import { ICreateChatLine } from 'src/@types/chatLine/createChatLine.interface';
 import { PrismaService } from 'src/config/prisma/prisma.service';
 import { ListAllMessagesOutput } from '../presentation/dto/listAllMessages.output';
 import { ChatGatewayInterface } from './chat-gateway.interface';
 import { IChatTagsDTO } from '../presentation/dto/chatTags.dto';
+import { AllChatsOutput } from 'src/@types/chats/allChatsOutput';
+import { skipCalculation } from 'src/utils/skipCalculation';
 
 @Injectable()
 export class ChatGateway implements ChatGatewayInterface {
@@ -16,34 +18,55 @@ export class ChatGateway implements ChatGatewayInterface {
     name,
     photo,
     tags,
-  }: Pick<Chat, 'category' | 'description' | 'name' | 'photo'> & {
+    isPublic,
+    userAccess,
+    creator,
+  }: Pick<Chat, 'category' | 'description' | 'name' | 'photo' | 'isPublic'> & {
     tags: IChatTagsDTO[];
+    userAccess: string[];
+    creator: User;
   }) {
-    const newChatWithTags = await this.prisma.$transaction(
-      async (transactionPrisma) => {
-        const newChat = await transactionPrisma.chat.create({
-          data: {
-            name,
-            category,
-            description,
-            photo,
-          },
-        });
-
-        const tagsOfChat = tags.map(({ id }) => ({
-          chatId: newChat.id,
-          chatTagId: id,
-        }));
-
-        await transactionPrisma.tagsOfChats.createMany({
-          data: tagsOfChat,
-        });
-
-        return newChat;
+    const newChat = await this.prisma.chat.create({
+      data: {
+        name,
+        category,
+        description,
+        photo,
+        isPublic,
+        userId: creator.id,
+        tagsOfChats: {
+          create: tags.map(({ id }) => ({
+            tag: { connect: { id } },
+          })),
+        },
       },
-    );
+      include: {
+        tagsOfChats: {
+          select: {
+            tag: true,
+          },
+        },
+      },
+    });
 
-    return newChatWithTags;
+    if (!isPublic && userAccess.length > 0) {
+      const listId = await this.prisma.user.findMany({
+        where: {
+          externalId: { in: userAccess },
+          id: { notIn: [creator.id] },
+        },
+        select: { id: true },
+      });
+
+      await this.prisma.accessUserChat.createMany({
+        data: listId.map(({ id }) => ({
+          chatId: newChat.id,
+          userId: id,
+        })),
+      });
+    }
+
+    return newChat;
   }
 
   async createChatLine({
@@ -65,7 +88,7 @@ export class ChatGateway implements ChatGatewayInterface {
   ): Promise<ListAllMessagesOutput[]> {
     return this.prisma.chatLine.findMany({
       select: {
-        User: {
+        user: {
           select: {
             username: true,
             id: true,
@@ -84,10 +107,18 @@ export class ChatGateway implements ChatGatewayInterface {
     });
   }
 
-  async findAllChatsWithRelation() {
-    return this.prisma.chat.findMany({
+  async findAllChatsWithRelation({
+    take,
+    page,
+  }: {
+    page: number;
+    take: number;
+  }): Promise<AllChatsOutput> {
+    const totalItems = await this.prisma.chat.count();
+
+    const paginationChats = await this.prisma.chat.findMany({
       include: {
-        TagsOfChats: {
+        tagsOfChats: {
           select: {
             tag: {
               select: {
@@ -97,7 +128,27 @@ export class ChatGateway implements ChatGatewayInterface {
             },
           },
         },
+        accessUsersChat: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        creator: {
+          select: {
+            username: true,
+          },
+        },
       },
+      skip: skipCalculation(page, take),
+      take,
+      orderBy: { id: 'desc' },
     });
+
+    return [paginationChats, totalItems];
   }
 }

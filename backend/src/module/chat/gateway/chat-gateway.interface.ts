@@ -2,6 +2,7 @@ import { Chat, ChatLine } from '@prisma/client';
 import { ICreateChatLine } from 'src/@types/chatLine/createChatLine.interface';
 import { ListAllMessagesOutput } from '../presentation/dto/listAllMessages.output';
 import { IChatTagsDTO } from '../presentation/dto/chatTags.dto';
+import { AllChatsOutput } from 'src/@types/chats/allChatsOutput';
 
 export class ChatGatewayInterface {
   createChat: (
@@ -12,5 +13,11 @@ export class ChatGatewayInterface {
   listAllChatMessagesByChatId: (
     chatId: number,
   ) => Promise<ListAllMessagesOutput[]>;
-  findAllChatsWithRelation: () => Promise<Chat[]>;
+  findAllChatsWithRelation: ({
+    take,
+    page,
+  }: {
+    page: number;
+    take: number;
+  }) => Promise<AllChatsOutput>;
 }

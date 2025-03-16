@@ -22,4 +22,8 @@ export class UserGateway implements UserGatewayInterface {
       },
     });
   }
+
+  async findUsers() {
+    return this.prisma.user.findMany();
+  }
 }
